@@ -1,0 +1,7 @@
+<h1>Add Property</h1>
+<form method="post" enctype="multipart/form-data">
+  {% csrf_token %}
+  {{ form.as_p }}
+  <button type="submit">Save</button>
+</form>
+<a href="{% url 'property_list' %}">Back</a>

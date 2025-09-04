@@ -1,0 +1,7 @@
+<h1>Properties</h1>
+<a href="{% url 'property_create' %}">Add Property</a>
+<ul>
+{% for property in properties %}
+  <li>{{ property.title }} - {{ property.location }} - ${{ property.price }}</li>
+{% endfor %}
+</ul>
