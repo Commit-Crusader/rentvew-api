@@ -7,7 +7,12 @@ from .models import Property, VirtualTour
 class VirtualTourSerializer(serializers.ModelSerializer):
     class Meta:
         model = VirtualTour
-        fields = ['id', 'tour_image', 'title', 'description', 'created_at']
+        fields = [
+            'id', 'title', 'description', 'tour_url', 'platform',
+            'preview_image', 'iframe_code', 'is_active',
+            'created_at', 'updated_at'
+        ]
+        read_only_fields = ['created_at', 'updated_at']
 
 # ---------------------------
 # Property Serializer

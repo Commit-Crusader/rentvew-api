@@ -11,4 +11,4 @@ class PropertyForm(forms.ModelForm):
 class VirtualTourForm(forms.ModelForm):
     class Meta:
         model = VirtualTour
-        fields = ['tour_image', 'title', 'description']
+        fields = ['title', 'description', 'tour_url', 'platform', 'preview_image', 'iframe_code', 'is_active']
