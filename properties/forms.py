@@ -5,7 +5,12 @@ from .models import Property, VirtualTour
 class PropertyForm(forms.ModelForm):
     class Meta:
         model = Property
-        fields = ['title', 'description', 'price', 'location', 'bedrooms', 'bathrooms', 'main_image', 'is_active']
+        fields = [
+            'title', 'description', 'property_type', 'price', 'deposit',
+            'address', 'city', 'state', 'country', 'zip_code',
+            'bedrooms', 'bathrooms', 'square_feet', 'amenities',
+            'available_from', 'status', 'main_image', 'is_active', 'is_featured'
+        ]
 
 # Form for creating/editing a Virtual Tour
 class VirtualTourForm(forms.ModelForm):
