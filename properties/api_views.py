@@ -1,8 +1,10 @@
-from rest_framework import generics, permissions
+from rest_framework import generics, permissions, filters
+from django_filters.rest_framework import DjangoFilterBackend
 from django.shortcuts import get_object_or_404
 from .models import Property, VirtualTour
 from .serializers import PropertySerializer, VirtualTourSerializer
 from .permissions import IsLandlordOrReadOnly, IsOwnerOrReadOnly, IsPropertyOwner
+from .filters import PropertyFilter
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
 from rest_framework import status
@@ -11,11 +13,24 @@ from rest_framework import status
 class PropertyListView(generics.ListAPIView):
     """
     List all active properties.
-    Public access.
+    Supports filtering, searching, and ordering.
+
+    Filter params:
+    - property_type, status, bedrooms, bathrooms, city, state, country
+    - min_price, max_price, min_bedrooms, max_bedrooms
+    - min_square_feet, max_square_feet, amenities
+
+    Search: title, description, city, address
+    Ordering: price, created_at, bedrooms, bathrooms
     """
     queryset = Property.objects.filter(is_active=True)
     serializer_class = PropertySerializer
     permission_classes = [permissions.AllowAny]
+    filterset_class = PropertyFilter
+    filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
+    search_fields = ['title', 'description', 'city', 'address']
+    ordering_fields = ['price', 'created_at', 'bedrooms', 'bathrooms', 'square_feet']
+    ordering = ['-created_at']  # Default ordering
 
 
 class PropertyCreateView(generics.CreateAPIView):
