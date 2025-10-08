@@ -1,47 +1,74 @@
-from rest_framework import generics, permissions
+from rest_framework import generics, permissions, filters
+from django_filters.rest_framework import DjangoFilterBackend
 from django.shortcuts import get_object_or_404
 from .models import Property, VirtualTour
 from .serializers import PropertySerializer, VirtualTourSerializer
+from .permissions import IsLandlordOrReadOnly, IsOwnerOrReadOnly, IsPropertyOwner
+from .filters import PropertyFilter
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
 from rest_framework import status
 
 # Property views
 class PropertyListView(generics.ListAPIView):
+    """
+    List all active properties.
+    Supports filtering, searching, and ordering.
+
+    Filter params:
+    - property_type, status, bedrooms, bathrooms, city, state, country
+    - min_price, max_price, min_bedrooms, max_bedrooms
+    - min_square_feet, max_square_feet, amenities
+
+    Search: title, description, city, address
+    Ordering: price, created_at, bedrooms, bathrooms
+    """
     queryset = Property.objects.filter(is_active=True)
     serializer_class = PropertySerializer
     permission_classes = [permissions.AllowAny]
+    filterset_class = PropertyFilter
+    filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
+    search_fields = ['title', 'description', 'city', 'address']
+    ordering_fields = ['price', 'created_at', 'bedrooms', 'bathrooms', 'square_feet']
+    ordering = ['-created_at']  # Default ordering
+
 
 class PropertyCreateView(generics.CreateAPIView):
+    """
+    Create a new property.
+    Only landlords can create properties.
+    """
     serializer_class = PropertySerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [IsLandlordOrReadOnly]
 
     def perform_create(self, serializer):
         serializer.save(owner=self.request.user)
 
+
 class PropertyDetailView(generics.RetrieveUpdateDestroyAPIView):
+    """
+    Retrieve, update, or delete a property.
+    Only the owner can update/delete.
+    """
     queryset = Property.objects.all()
     serializer_class = PropertySerializer
-    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
-
-    def perform_update(self, serializer):
-        if self.get_object().owner != self.request.user:
-            raise PermissionError("You do not have permission to update this property.")
-        serializer.save()
+    permission_classes = [IsOwnerOrReadOnly]
 
     def perform_destroy(self, instance):
-        if instance.owner != self.request.user:
-            raise PermissionError("You do not have permission to delete this property.")
+        # Soft delete
         instance.is_active = False
         instance.save()
 
+
 # Virtual tour creation
 @api_view(['POST'])
-@permission_classes([permissions.IsAuthenticated])
+@permission_classes([IsPropertyOwner])
 def virtual_tour_create(request, property_id):
+    """
+    Create a virtual tour for a property.
+    Only the property owner can create tours.
+    """
     property_obj = get_object_or_404(Property, pk=property_id)
-    if property_obj.owner != request.user:
-        return Response({'detail': 'Permission denied.'}, status=status.HTTP_403_FORBIDDEN)
 
     serializer = VirtualTourSerializer(data=request.data)
     if serializer.is_valid():

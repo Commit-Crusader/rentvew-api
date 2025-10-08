@@ -12,6 +12,9 @@ db.sqlite3
 media/
 staticfiles/
 
+# Environment variables
+.env
+
 # Virtual environment
 venv/
 env/
